@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,7 +27,7 @@ class ReadingHistory extends Model
     {
         static::creating(function (ReadingHistory $history) {
             if (empty($history->read_at)) {
-                $history->read_at = now();
+                $history->read_at = Carbon::now();
             }
         });
     }

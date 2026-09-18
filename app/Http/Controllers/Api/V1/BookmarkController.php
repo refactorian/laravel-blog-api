@@ -16,7 +16,7 @@ class BookmarkController extends ApiController
         $bookmarks = $request->user()->bookmarks()
             ->with(['post.author', 'post.category', 'post.tags'])
             ->latest()
-            ->paginate(min($request->get('per_page', 20), 100));
+            ->paginate(min($request->input('per_page', 20), 100));
 
         $posts = $bookmarks->getCollection()->pluck('post')->filter();
 

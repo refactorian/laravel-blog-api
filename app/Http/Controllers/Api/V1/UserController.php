@@ -27,7 +27,7 @@ class UserController extends ApiController
             ->published()
             ->with(['category', 'tags'])
             ->latest('published_at')
-            ->paginate(min($request->get('per_page', 20), 100));
+            ->paginate(min($request->input('per_page', 20), 100));
 
         return $this->success(PostResource::collection($posts));
     }
@@ -36,7 +36,7 @@ class UserController extends ApiController
     {
         $followerIds = Follow::where('following_id', $user->id)->pluck('follower_id');
         $followers = User::whereIn('id', $followerIds)
-            ->paginate(min($request->get('per_page', 20), 100));
+            ->paginate(min($request->input('per_page', 20), 100));
 
         return $this->success(UserResource::collection($followers));
     }
@@ -45,7 +45,7 @@ class UserController extends ApiController
     {
         $followingIds = Follow::where('follower_id', $user->id)->pluck('following_id');
         $following = User::whereIn('id', $followingIds)
-            ->paginate(min($request->get('per_page', 20), 100));
+            ->paginate(min($request->input('per_page', 20), 100));
 
         return $this->success(UserResource::collection($following));
     }

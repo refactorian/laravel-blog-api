@@ -18,7 +18,7 @@ class FeedController extends ApiController
             ->with(['author', 'category', 'tags'])
             ->whereIn('user_id', $followingIds)
             ->latest('published_at')
-            ->paginate(min($request->get('per_page', 20), 100));
+            ->paginate(min($request->input('per_page', 20), 100));
 
         return $this->success(PostResource::collection($posts));
     }

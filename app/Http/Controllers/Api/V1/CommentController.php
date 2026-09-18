@@ -20,7 +20,7 @@ class CommentController extends ApiController
             ->whereNull('parent_id')
             ->withCount('replies')
             ->latest()
-            ->paginate(min($request->get('per_page', 20), 100));
+            ->paginate(min($request->input('per_page', 20), 100));
 
         return $this->success(CommentResource::collection($comments));
     }

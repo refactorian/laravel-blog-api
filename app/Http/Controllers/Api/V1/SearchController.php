@@ -20,7 +20,7 @@ class SearchController extends ApiController
         ]);
 
         $query = $request->q;
-        $type = $request->get('type', 'posts');
+        $type = $request->input('type', 'posts');
 
         if ($type === 'posts') {
             $posts = Post::published()
@@ -31,7 +31,7 @@ class SearchController extends ApiController
                         ->orWhere('content', 'like', "%{$query}%");
                 })
                 ->latest('published_at')
-                ->paginate(min($request->get('per_page', 20), 100));
+                ->paginate(min($request->input('per_page', 20), 100));
 
             return $this->success(PostResource::collection($posts));
         }

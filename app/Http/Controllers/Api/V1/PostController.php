@@ -54,7 +54,7 @@ class PostController extends ApiController
             }
         }
 
-        $perPage = min($request->get('per_page', 20), 100);
+        $perPage = min($request->input('per_page', 20), 100);
         $posts = $query->paginate($perPage);
 
         return $this->success(PostResource::collection($posts));
@@ -84,7 +84,7 @@ class PostController extends ApiController
             'content' => $request->content,
             'category_id' => $request->category_id,
             'featured_image' => $request->featured_image,
-            'status' => $request->get('status', 'draft'),
+            'status' => $request->input('status', 'draft'),
         ]);
 
         if ($request->has('tag_ids')) {

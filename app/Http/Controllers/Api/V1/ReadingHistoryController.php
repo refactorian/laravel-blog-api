@@ -15,7 +15,7 @@ class ReadingHistoryController extends ApiController
         $history = $request->user()->readingHistory()
             ->with(['post.author', 'post.category', 'post.tags'])
             ->latest('read_at')
-            ->paginate(min($request->get('per_page', 20), 100));
+            ->paginate(min($request->input('per_page', 20), 100));
 
         $posts = $history->getCollection()->pluck('post')->filter();
 
