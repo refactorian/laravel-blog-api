@@ -1,58 +1,248 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Blog API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A production-ready REST API backend for a blog platform, built with Laravel and Sanctum authentication. Designed for Flutter mobile applications.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **PHP 8.3+** / **Laravel 11**
+- **Laravel Sanctum** — token-based API authentication (30-day token expiration)
+- **MySQL / PostgreSQL** — relational database
+- **PHPUnit** — automated testing (166 tests, 374 assertions)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Quick Start
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo-url> && cd laravel-blog-api
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+The API is available at `http://localhost:8000/api/v1`.
 
-## Contributing
+## Authentication
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+All authenticated endpoints require a Bearer token:
 
-## Code of Conduct
+```
+Authorization: Bearer <your-token>
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Get a token via `/register` or `/login`. Tokens expire after 30 days.
 
-## Security Vulnerabilities
+### Rate Limiting
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Auth endpoints are rate-limited:
+- Register / Login: 10 requests per minute
+- Forgot / Reset password: 5 requests per minute
+
+---
+
+## API Endpoints
+
+Base URL: `/api/v1`
+
+### Auth
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/auth/register` | No | Register a new user |
+| `POST` | `/auth/login` | No | Login and get token |
+| `POST` | `/auth/logout` | Yes | Invalidate current token |
+| `GET` | `/auth/me` | Yes | Get authenticated user |
+| `POST` | `/auth/forgot-password` | No | Send password reset link |
+| `POST` | `/auth/reset-password` | No | Reset password with token |
+
+### Profile
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/profile` | Yes | Get current user profile |
+| `PUT` | `/profile` | Yes | Update profile (name, bio, avatar) |
+| `PUT` | `/profile/password` | Yes | Change password |
+
+### Posts
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/posts` | No | List posts (paginated, filterable, sortable) |
+| `GET` | `/posts/{slug}` | No | Get single post by slug |
+| `POST` | `/posts` | Yes | Create a new post |
+| `PUT` | `/posts/{id}` | Yes | Update a post |
+| `DELETE` | `/posts/{id}` | Yes | Delete a post (soft delete) |
+| `POST` | `/posts/{id}/publish` | Yes | Publish a draft post |
+| `POST` | `/posts/{id}/unpublish` | Yes | Unpublish a post |
+| `GET` | `/posts/{id}/related` | No | Get related posts |
+| `POST` | `/posts/{id}/read` | Yes | Mark post as read |
+
+**Query Parameters for `GET /posts`:**
+
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `search` | `?search=laravel` | Search in title, excerpt, content |
+| `category` | `?category=technology` | Filter by category slug |
+| `tag` | `?tag=flutter` | Filter by tag slug |
+| `author` | `?author=1` | Filter by user ID |
+| `sort` | `?sort=-published_at` | Sort (prefix `-` for desc) |
+| `page` | `?page=1` | Page number |
+| `per_page` | `?per_page=20` | Results per page (max 100) |
+
+### Comments
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/posts/{id}/comments` | Yes | List comments for a post |
+| `POST` | `/posts/{id}/comments` | Yes | Create a comment or reply |
+| `PUT` | `/comments/{id}` | Yes | Update a comment |
+| `DELETE` | `/comments/{id}` | Yes | Delete a comment |
+
+### Likes
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/posts/{id}/like` | Yes | Like a post |
+| `DELETE` | `/posts/{id}/like` | Yes | Unlike a post |
+| `GET` | `/posts/{id}/like` | Yes | Check like status and count |
+
+### Bookmarks
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/bookmarks` | Yes | List user's bookmarks |
+| `POST` | `/posts/{id}/bookmark` | Yes | Bookmark a post |
+| `DELETE` | `/posts/{id}/bookmark` | Yes | Remove bookmark |
+| `GET` | `/posts/{id}/bookmark` | Yes | Check bookmark status |
+
+### Categories
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/categories` | No | List all categories with post counts |
+| `GET` | `/categories/{slug}` | No | Get category details |
+| `POST` | `/categories` | Yes | Create category (author/admin) |
+| `PUT` | `/categories/{id}` | Yes | Update category (author/admin) |
+| `DELETE` | `/categories/{id}` | Yes | Delete category (admin only) |
+
+### Tags
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/tags` | No | List all tags with post counts |
+| `GET` | `/tags/{slug}` | No | Get tag details |
+| `POST` | `/tags` | Yes | Create tag (author/admin) |
+| `PUT` | `/tags/{id}` | Yes | Update tag (author/admin) |
+| `DELETE` | `/tags/{id}` | Yes | Delete tag (admin only) |
+
+### Users
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/users/{id}` | No | Get public user profile |
+| `GET` | `/users/{id}/posts` | No | Get user's published posts |
+| `GET` | `/users/{id}/followers` | No | List user's followers |
+| `GET` | `/users/{id}/following` | No | List users this user follows |
+| `POST` | `/users/{id}/follow` | Yes | Follow a user |
+| `DELETE` | `/users/{id}/follow` | Yes | Unfollow a user |
+
+### Search
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/search?q=laravel` | No | Search posts (default) |
+| `GET` | `/search?q=john&type=users` | No | Search users |
+
+### Home / Discovery
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/home` | No | Featured, latest, popular posts, categories, trending tags |
+
+### Feed
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/feed` | Yes | Personalized feed from followed authors |
+
+### Media
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/media` | Yes | Upload image (JPEG, PNG, WebP, max 10MB) |
+| `DELETE` | `/media/{id}` | Yes | Delete uploaded media |
+
+### Notifications
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/notifications` | Yes | List notifications |
+| `POST` | `/notifications/{id}/read` | Yes | Mark notification as read |
+| `POST` | `/notifications/read-all` | Yes | Mark all as read |
+
+### Reading History
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/reading-history` | Yes | List reading history |
+| `DELETE` | `/reading-history` | Yes | Clear reading history |
+
+---
+
+## Response Format
+
+**Success:**
+
+```json
+{
+    "success": true,
+    "message": "Posts retrieved successfully.",
+    "data": {}
+}
+```
+
+**Validation Error:**
+
+```json
+{
+    "success": false,
+    "message": "Validation failed.",
+    "errors": {
+        "email": ["The email field is required."]
+    }
+}
+```
+
+## User Roles
+
+| Role | Permissions |
+|------|-------------|
+| `user` | Like, bookmark, comment, follow, read history |
+| `author` | Create/edit/delete own posts, manage categories & tags |
+| `admin` | Full access to all resources |
+
+## Database
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+This creates:
+- 1 admin user (`admin@example.com`)
+- 5 author users
+- 10 regular users
+- 10 categories, 20 tags
+- 25 published posts with tags
+- Comments, likes, bookmarks, and follows
+
+## Testing
+
+```bash
+php artisan test
+```
+
+166 tests covering authentication, posts, categories, tags, comments, likes, bookmarks, follows, search, notifications, reading history, media, feed, users, and home endpoints.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT
